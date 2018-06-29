@@ -6,7 +6,16 @@ namespace MqttClient
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            string error = null;
+            var mqtt = new Mqtt();
+            uint[] buffer = { 14,  };
+            uint[] data = { 255, 255, 255 };
+            var output = mqtt.EncodeRemainingLength(data);
+            var lenght = mqtt.DecodeRemainingLength(output, out error);
+            if (error != null)
+                Console.WriteLine("Error : " + error);
+            Console.WriteLine("Lenght : " + lenght);
+            Console.ReadLine();
         }
     }
 }

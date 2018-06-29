@@ -35,35 +35,44 @@ namespace MqttClient
     {
         public Mqtt() { }
 
-        public uint EncodeRemainingLenght(uint b)
+        public byte[] EncodeRemainingLength(uint[] inBytes)
         {
-            do
+            List<byte> outBytes = new List<byte>();
+            foreach (var b in inBytes)
             {
-                var encodedByte = b % 128;
-                b = b / 128;
-                if (b > 0)
-                    encodedByte = encodedByte | 128;
-                else
-                    return encodedByte;
-            } while (b > 0);
-            return 0;
+                var x = b;
+                do
+                {
+                    var encodedByte = x % 128;
+                    x /= 128;
+                    if (x > 0)
+                        encodedByte = encodedByte | 128;
+                    outBytes.Add((byte)encodedByte);
+                } while (x > 0);
+            }
+            return outBytes.ToArray();
         }
 
-        public int DecodeRemainingLenght(int b, out string error)
+        public int DecodeRemainingLength(byte[] inBytes, out string error)
         {
+            List<long> outBytes = new List<long>();
             error = null;
             var multiplier = 1;
-            var value = 0;
-            do
+            int lenght = 0;
+            foreach (var b in inBytes)
             {
-                value += (b & 127) * multiplier;
-                multiplier *= 128;
-                if (multiplier > 128 * 128 * 128)
+                do
                 {
-                    error = "Malformed Remaining Length";
-                }
-            } while ((b & 128) != 0);
-            return value;
+                    lenght += (b & 127) * multiplier;
+                    multiplier *= 128;
+                    if (multiplier > 128 * 128 * 128)
+                    {
+                        error = "Malformed Remaining Length";
+                        return lenght;
+                    }
+                } while ((b & 128) != 0);
+            }
+            return lenght;
         }
     }
 }
